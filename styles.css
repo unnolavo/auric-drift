@@ -25,8 +25,9 @@ body {
   display: grid;
   place-items: center;
   background:
-    radial-gradient(circle at 30% 0%, rgba(255, 210, 88, 0.22), transparent 30%),
-    radial-gradient(circle at 85% 15%, rgba(70, 190, 255, 0.16), transparent 28%),
+    radial-gradient(circle at 18% 4%, rgba(255, 210, 88, 0.2), transparent 28%),
+    radial-gradient(circle at 84% 18%, rgba(70, 190, 255, 0.16), transparent 30%),
+    radial-gradient(circle at 48% 104%, rgba(62, 230, 166, 0.12), transparent 34%),
     linear-gradient(155deg, #090c13 0%, #121723 46%, #090b10 100%);
 }
 
@@ -51,14 +52,15 @@ canvas {
   left: 14px;
   right: 14px;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
   pointer-events: none;
 }
 
 .hud div {
   min-width: 0;
-  padding: 8px 10px;
+  min-height: 52px;
+  padding: 8px 9px;
   border: 1px solid rgba(255, 255, 255, 0.13);
   border-radius: 8px;
   background: rgba(8, 11, 18, 0.56);
@@ -78,7 +80,7 @@ canvas {
   display: block;
   margin-top: 2px;
   color: #ffffff;
-  font-size: clamp(18px, 5vw, 26px);
+  font-size: clamp(16px, 4.4vw, 24px);
   line-height: 1;
 }
 
@@ -99,7 +101,7 @@ canvas {
   width: 100%;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #3ee6a6, #ffd45f, #ff6678);
+  background: linear-gradient(90deg, #3ee6a6, #47d8ff, #ffd45f, #ff6678);
   transform-origin: left center;
   transition: transform 120ms ease-out;
 }
@@ -156,4 +158,20 @@ button {
 
 button:active {
   transform: translateY(1px) scale(0.99);
+}
+
+@media (max-width: 360px) {
+  .hud {
+    left: 10px;
+    right: 10px;
+    gap: 6px;
+  }
+
+  .hud div {
+    padding-inline: 7px;
+  }
+
+  .label {
+    font-size: 9px;
+  }
 }

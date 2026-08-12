@@ -3,6 +3,9 @@
 A phone-first static arcade game. Drag anywhere to steer, collect gold and gates,
 avoid mines, and keep the shield meter alive.
 
+The current build adds phase progression, near-miss bonuses, prism pickups,
+screen pulses, particle bursts, and a drift trail for a richer mobile demo.
+
 ## Run Locally
 
 From this folder:

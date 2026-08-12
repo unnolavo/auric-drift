@@ -3,6 +3,7 @@ const ctx = canvas.getContext("2d");
 const scoreEl = document.querySelector("#score");
 const chainEl = document.querySelector("#chain");
 const bestEl = document.querySelector("#best");
+const phaseEl = document.querySelector("#phase");
 const shieldBar = document.querySelector("#shieldBar");
 const overlay = document.querySelector("#overlay");
 const startButton = document.querySelector("#startButton");
@@ -17,6 +18,9 @@ const state = {
   score: 0,
   best: Number(localStorage.getItem("auric-drift-best") || 0),
   chain: 1,
+  phase: 1,
+  message: "",
+  messageTime: 0,
   shield: 1,
   speed: 290,
   spawn: 0,
@@ -26,6 +30,8 @@ const state = {
   player: { x: 0, y: 0, r: 17, vx: 0 },
   items: [],
   sparks: [],
+  rings: [],
+  trail: [],
   stars: [],
 };
 
@@ -54,6 +60,9 @@ function reset() {
   state.last = performance.now();
   state.score = 0;
   state.chain = 1;
+  state.phase = 1;
+  state.message = "";
+  state.messageTime = 0;
   state.shield = 1;
   state.speed = 290;
   state.spawn = 0;
@@ -61,8 +70,14 @@ function reset() {
   state.flash = 0;
   state.items = [];
   state.sparks = [];
+  state.rings = [];
+  state.trail = [];
   state.player.x = state.width / 2;
   state.player.vx = 0;
+  overlay.querySelector(".brand").textContent = "AURIC DRIFT";
+  overlay.querySelector("p").textContent =
+    "Drag anywhere to steer. Collect gold, skim danger, hit prisms, and keep your shield alive.";
+  startButton.textContent = "Launch";
   overlay.classList.add("hidden");
   requestAnimationFrame(loop);
 }
@@ -83,17 +98,28 @@ function addSpark(x, y, color, count = 12) {
   }
 }
 
+function addRing(x, y, color, size = 42) {
+  state.rings.push({ x, y, color, size, life: 0.42, age: 0 });
+}
+
+function showMessage(text) {
+  state.message = text;
+  state.messageTime = 0.9;
+}
+
 function spawnItem() {
   const roll = Math.random();
   const lane = 34 + Math.random() * (state.width - 68);
-  if (roll < 0.52) {
-    state.items.push({ type: "gold", x: lane, y: -24, r: 12, spin: Math.random() * 6 });
-  } else if (roll < 0.76) {
-    state.items.push({ type: "gate", x: lane, y: -42, r: 24, spin: 0 });
+  if (roll < 0.46) {
+    state.items.push({ type: "gold", x: lane, y: -24, r: 12, spin: Math.random() * 6, seen: false });
+  } else if (roll < 0.68) {
+    state.items.push({ type: "gate", x: lane, y: -42, r: 24, spin: 0, seen: false });
+  } else if (roll < 0.82) {
+    state.items.push({ type: "shield", x: lane, y: -24, r: 13, spin: 0, seen: false });
   } else if (roll < 0.9) {
-    state.items.push({ type: "shield", x: lane, y: -24, r: 13, spin: 0 });
+    state.items.push({ type: "prism", x: lane, y: -28, r: 15, spin: Math.random() * 6, seen: false });
   } else {
-    state.items.push({ type: "mine", x: lane, y: -34, r: 18 + Math.random() * 9, spin: 0 });
+    state.items.push({ type: "mine", x: lane, y: -34, r: 18 + Math.random() * 9, spin: 0, seen: false });
   }
 }
 
@@ -106,14 +132,16 @@ function collide(a, b) {
 
 function update(dt) {
   state.time += dt;
-  state.speed += dt * 10;
+  state.phase = Math.min(5, 1 + Math.floor(state.score / 650));
+  state.speed += dt * (10 + state.phase * 1.8);
   state.spawn -= dt;
   state.shake = Math.max(0, state.shake - dt * 22);
   state.flash = Math.max(0, state.flash - dt * 3);
+  state.messageTime = Math.max(0, state.messageTime - dt);
 
   if (state.spawn <= 0) {
     spawnItem();
-    state.spawn = Math.max(0.18, 0.52 - state.time * 0.006);
+    state.spawn = Math.max(0.16, 0.54 - state.time * 0.005 - state.phase * 0.026);
   }
 
   const targetX = state.pointer.active ? state.pointer.x : state.width / 2 + Math.sin(state.time * 1.2) * 38;
@@ -121,6 +149,13 @@ function update(dt) {
   state.player.vx *= Math.pow(0.0008, dt);
   state.player.x += state.player.vx * dt;
   state.player.x = Math.max(28, Math.min(state.width - 28, state.player.x));
+  state.trail.unshift({
+    x: state.player.x,
+    y: state.player.y + 10,
+    w: 8 + Math.min(20, Math.abs(state.player.vx) * 0.055),
+    life: 0.28,
+  });
+  state.trail = state.trail.slice(0, 18);
 
   for (const star of state.stars) {
     star.y += state.speed * dt * star.z * 0.28;
@@ -131,8 +166,9 @@ function update(dt) {
   }
 
   for (const item of state.items) {
-    item.y += state.speed * dt * (item.type === "gate" ? 1.08 : 1);
-    item.spin += dt * 5;
+    const itemSpeed = item.type === "gate" ? 1.08 : item.type === "prism" ? 0.92 : 1;
+    item.y += state.speed * dt * itemSpeed;
+    item.spin += dt * (item.type === "mine" ? 3.4 : 5);
   }
 
   for (let i = state.items.length - 1; i >= 0; i--) {
@@ -144,17 +180,40 @@ function update(dt) {
         state.shake = 9;
         state.flash = 1;
         addSpark(item.x, item.y, "#ff6678", 20);
+        addRing(item.x, item.y, "#ff6678", 70);
+        showMessage("SHIELD HIT");
       } else {
-        const value = item.type === "gate" ? 35 : item.type === "shield" ? 20 : 10;
+        const value =
+          item.type === "gate" ? 35 : item.type === "shield" ? 20 : item.type === "prism" ? 70 : 10;
         state.score += value * state.chain;
-        state.chain = Math.min(9, state.chain + 1);
+        state.chain = Math.min(12, state.chain + (item.type === "prism" ? 2 : 1));
         if (item.type === "shield") state.shield = Math.min(1, state.shield + 0.28);
-        addSpark(item.x, item.y, item.type === "shield" ? "#3ee6a6" : "#ffd45f");
+        if (item.type === "prism") {
+          state.shield = Math.min(1, state.shield + 0.12);
+          state.shake = 4;
+          showMessage("PRISM SURGE");
+        } else if (state.chain >= 7) {
+          showMessage(`${state.chain}x CHAIN`);
+        }
+        const color = item.type === "shield" ? "#3ee6a6" : item.type === "prism" ? "#ff8bd2" : "#ffd45f";
+        addSpark(item.x, item.y, color, item.type === "prism" ? 24 : 12);
+        addRing(item.x, item.y, color, item.type === "prism" ? 82 : 46);
       }
       state.items.splice(i, 1);
     } else if (item.y > state.height + 50) {
       if (item.type !== "mine") state.chain = 1;
       state.items.splice(i, 1);
+    } else if (
+      item.type === "mine" &&
+      !item.seen &&
+      item.y > state.player.y + state.player.r &&
+      Math.abs(item.x - state.player.x) < item.r + state.player.r + 24
+    ) {
+      item.seen = true;
+      state.score += 14 * state.chain;
+      state.chain = Math.min(12, state.chain + 1);
+      addSpark(item.x, state.player.y, "#47d8ff", 8);
+      showMessage("NEAR MISS");
     }
   }
 
@@ -166,12 +225,22 @@ function update(dt) {
   }
   state.sparks = state.sparks.filter((spark) => spark.life > 0);
 
+  for (const ring of state.rings) {
+    ring.age += dt;
+    ring.life -= dt;
+  }
+  state.rings = state.rings.filter((ring) => ring.life > 0);
+
+  for (const trail of state.trail) trail.life -= dt;
+  state.trail = state.trail.filter((trail) => trail.life > 0);
+
   state.score += dt * state.chain * 2;
-  state.shield -= dt * 0.025;
+  state.shield -= dt * (0.021 + state.phase * 0.002);
   if (state.shield <= 0) gameOver();
 
   scoreEl.textContent = Math.floor(state.score);
   chainEl.textContent = `x${state.chain}`;
+  phaseEl.textContent = ["I", "II", "III", "IV", "V"][state.phase - 1] || "V";
   shieldBar.style.transform = `scaleX(${Math.max(0, state.shield)})`;
 }
 
@@ -190,6 +259,13 @@ function drawPlayer(x, y) {
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(state.player.vx * 0.002);
+  ctx.globalAlpha = 0.28;
+  ctx.strokeStyle = "#47d8ff";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(0, 0, 30 + Math.sin(state.time * 7) * 2, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
   ctx.shadowColor = "#47d8ff";
   ctx.shadowBlur = 22;
   ctx.fillStyle = "#edf7ff";
@@ -243,6 +319,21 @@ function drawItem(item) {
     ctx.lineTo(-13, -5);
     ctx.closePath();
     ctx.fill();
+  } else if (item.type === "prism") {
+    ctx.strokeStyle = "#ff8bd2";
+    ctx.lineWidth = 3;
+    ctx.shadowColor = "#ff8bd2";
+    ctx.shadowBlur = 22;
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * Math.PI * 2;
+      const r = i % 2 ? 9 : item.r + 3;
+      ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+    }
+    ctx.closePath();
+    ctx.stroke();
+    ctx.fillStyle = "rgba(255, 139, 210, 0.42)";
+    ctx.fill();
   } else {
     ctx.fillStyle = "#ff6678";
     ctx.shadowColor = "#ff6678";
@@ -267,11 +358,22 @@ function draw() {
   ctx.translate(sx, sy);
 
   const gradient = ctx.createLinearGradient(0, 0, 0, state.height);
-  gradient.addColorStop(0, "#101728");
+  gradient.addColorStop(0, state.phase >= 4 ? "#17112b" : "#101728");
   gradient.addColorStop(0.55, "#080b12");
   gradient.addColorStop(1, "#17100b");
   ctx.fillStyle = gradient;
   ctx.fillRect(-20, -20, state.width + 40, state.height + 40);
+
+  ctx.globalAlpha = 0.12;
+  ctx.fillStyle = "#3ee6a6";
+  ctx.beginPath();
+  ctx.ellipse(state.width * 0.15, state.height * 0.2, 95, 34, -0.45, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#ffd45f";
+  ctx.beginPath();
+  ctx.arc(state.width * 0.84, state.height * 0.12, 38, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = 1;
 
   for (const star of state.stars) {
     ctx.globalAlpha = 0.35 + star.z * 0.35;
@@ -290,6 +392,26 @@ function draw() {
     ctx.stroke();
   }
 
+  for (const trail of state.trail) {
+    ctx.globalAlpha = Math.max(0, trail.life * 2.5);
+    ctx.fillStyle = "#47d8ff";
+    ctx.beginPath();
+    ctx.ellipse(trail.x, trail.y, trail.w, 9, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  for (const ring of state.rings) {
+    const p = ring.age / (ring.age + ring.life);
+    ctx.globalAlpha = Math.max(0, ring.life * 2.1);
+    ctx.strokeStyle = ring.color;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(ring.x, ring.y, ring.size * (0.25 + p), 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+
   for (const item of state.items) drawItem(item);
   drawPlayer(state.player.x, state.player.y);
 
@@ -305,6 +427,15 @@ function draw() {
   if (state.flash > 0) {
     ctx.fillStyle = `rgba(255, 102, 120, ${state.flash * 0.18})`;
     ctx.fillRect(-20, -20, state.width + 40, state.height + 40);
+  }
+
+  if (state.messageTime > 0) {
+    ctx.globalAlpha = Math.min(1, state.messageTime * 2);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "900 22px Inter, system-ui, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(state.message, state.width / 2, state.height * 0.34);
+    ctx.globalAlpha = 1;
   }
   ctx.restore();
 }
