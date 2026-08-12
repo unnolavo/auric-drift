@@ -21,22 +21,34 @@
           <strong id="chain">x1</strong>
         </div>
         <div>
+          <span class="label">stage</span>
+          <strong id="stage">1</strong>
+        </div>
+        <div>
           <span class="label">best</span>
           <strong id="best">0</strong>
         </div>
-        <div>
-          <span class="label">phase</span>
-          <strong id="phase">I</strong>
-        </div>
+      </section>
+
+      <section class="mission" aria-live="polite">
+        <span id="objective">Steal 12 gold caches</span>
+        <strong id="objectiveProgress">0/12</strong>
+      </section>
+
+      <section class="vault" aria-hidden="true">
+        <span id="vaultBar"></span>
       </section>
 
       <section class="meter" aria-hidden="true">
         <span id="shieldBar"></span>
       </section>
 
+      <button id="pulseButton" class="pulse-button" type="button">Pulse</button>
+
       <section id="overlay" class="overlay">
         <div class="brand">AURIC DRIFT</div>
-        <p>Drag anywhere to steer. Collect gold, skim danger, hit prisms, and keep your shield alive.</p>
+        <p>Heist Run: clear three convoy stages, choose upgrades, then crack the vault core.</p>
+        <div id="upgradeChoices" class="upgrade-choices" aria-live="polite"></div>
         <button id="startButton" type="button">Launch</button>
       </section>
     </main>

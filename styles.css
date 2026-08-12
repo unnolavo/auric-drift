@@ -84,6 +84,64 @@ canvas {
   line-height: 1;
 }
 
+.mission {
+  position: absolute;
+  top: max(78px, calc(env(safe-area-inset-top) + 78px));
+  left: 14px;
+  right: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 38px;
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 8px;
+  color: rgba(245, 247, 251, 0.86);
+  background: rgba(8, 11, 18, 0.46);
+  backdrop-filter: blur(14px);
+  pointer-events: none;
+}
+
+.mission span {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mission strong {
+  color: #ffd45f;
+  font-size: 15px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.vault {
+  position: absolute;
+  top: max(122px, calc(env(safe-area-inset-top) + 122px));
+  left: 14px;
+  right: 14px;
+  height: 7px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.1);
+  pointer-events: none;
+}
+
+.vault span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #ff6678, #ff8bd2, #ffd45f);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 160ms ease-out;
+}
+
 .meter {
   position: absolute;
   left: 14px;
@@ -104,6 +162,25 @@ canvas {
   background: linear-gradient(90deg, #3ee6a6, #47d8ff, #ffd45f, #ff6678);
   transform-origin: left center;
   transition: transform 120ms ease-out;
+}
+
+.pulse-button {
+  position: absolute;
+  right: 14px;
+  bottom: max(34px, calc(env(safe-area-inset-bottom) + 34px));
+  z-index: 2;
+  width: 92px;
+  min-height: 46px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #f5f7fb;
+  background: rgba(71, 216, 255, 0.22);
+  box-shadow: 0 14px 34px rgba(71, 216, 255, 0.18);
+}
+
+.pulse-button:disabled {
+  color: rgba(245, 247, 251, 0.54);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: none;
 }
 
 .overlay {
@@ -142,6 +219,46 @@ canvas {
   line-height: 1.45;
 }
 
+.upgrade-choices {
+  display: grid;
+  width: min(330px, 88vw);
+  gap: 8px;
+}
+
+.upgrade-choices:empty {
+  display: none;
+}
+
+.upgrade-card {
+  width: 100%;
+  min-height: 64px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  color: #f5f7fb;
+  background: rgba(255, 255, 255, 0.09);
+  box-shadow: none;
+  text-align: left;
+}
+
+.upgrade-card strong,
+.upgrade-card span {
+  display: block;
+}
+
+.upgrade-card strong {
+  font-size: 15px;
+  line-height: 1.15;
+}
+
+.upgrade-card span {
+  margin-top: 4px;
+  color: rgba(245, 247, 251, 0.68);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
 button {
   width: min(220px, 74vw);
   min-height: 52px;
@@ -173,5 +290,10 @@ button:active {
 
   .label {
     font-size: 9px;
+  }
+
+  .mission {
+    left: 10px;
+    right: 10px;
   }
 }

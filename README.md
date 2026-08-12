@@ -1,10 +1,11 @@
 # Auric Drift
 
-A phone-first static arcade game. Drag anywhere to steer, collect gold and gates,
-avoid mines, and keep the shield meter alive.
+A phone-first static arcade heist game. Drag anywhere to steer, clear staged
+objectives, choose upgrades, and crack the vault core.
 
-The current build adds phase progression, near-miss bonuses, prism pickups,
-screen pulses, particle bursts, and a drift trail for a richer mobile demo.
+The current build adds a three-stage roguelite run, upgrade choices, a pulse
+ability, moving hazards, near-miss bonuses, prism pickups, a vault finale,
+particle bursts, and a drift trail for a richer mobile demo.
 
 ## Run Locally
 
